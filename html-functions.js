@@ -18,6 +18,36 @@ export function generateStyles(config) {
     max-width: 100%;
     max-height: 100%;
   }
+
+  #solar-info {
+    grid-column-start: span 2;
+  }
+  #solar-info p {
+    display: block;
+  }
+
+  #battery-image {
+    display: flex;
+  }
+
+  #battery-image img {
+    height: 50px;
+  }
+
+  #battery-charge-info {
+    align-items: flex-end;
+    padding-bottom: 0.5em;
+  }
+
+  #battery-soc-info {
+    padding-top: 0.5em;
+  }
+
+  #home-info {
+    align-items: center;
+    padding-left: 0.5em;
+    grid-column-start: span 2;
+  }
   
   /* CELLS */
   .cell {
@@ -43,8 +73,7 @@ export function generateStyles(config) {
   text-align: right;
   } */
   .header-text {
-    font-size: min(4vw, 1.17em);
-    font-weight: bold;
+    font-size: min(4vw, 1em);
     line-height: 1;
     margin: 0;
     padding-left: 3px;
@@ -54,6 +83,7 @@ export function generateStyles(config) {
   }
   .sub-text {
     font-size: min(2.5vw, 0.95em);
+    color: var(--secondary-text-color);
     line-height: 1;
     margin: 0;
     padding-left: 3px;
@@ -69,7 +99,7 @@ export function generateStyles(config) {
     align-items: center;
     text-align: center;
     justify-content: center;
-    width: auto;
+    width: 70%;
     object-fit: contain;
     position: relative;
   }
@@ -79,6 +109,9 @@ export function generateStyles(config) {
   }
   
   /* ARROWS */
+  #grid-arrows {
+    grid-column-start: span 2;
+  }
   .arrow-cell {
     margin: auto;
     display: flex;
@@ -89,6 +122,11 @@ export function generateStyles(config) {
     width: auto;
     object-fit: contain;
     position: relative;
+    margin: 10px;
+  }
+  .arrow-cell img {
+    height: 16px;
+    width: 11px
   }
   .arrows-left {
     transform: rotate(0deg);
@@ -97,27 +135,27 @@ export function generateStyles(config) {
     transform: rotate(90deg);
   }
   .arrows-right {
-    transform: rotate(180deg);
+    transform: rotate(180deg) translateY(4px);
   }
   .arrows-down {
-    transform: rotate(-90deg);
+    transform: rotate(-90deg) translateY(4px);
   }
   .arrows-none {
     opacity: 0;
   }
   
   /* ARROW ANIMATIONS*/
-  .arrow-1 img {
-    animation: arrow-animation-1 1.5s infinite;
+  .arrow-1 img, .arrow-5 img {
+    animation: arrow-animation-1 1.25s infinite;
   }
-  .arrow-2 img {
-    animation: arrow-animation-2 1.5s infinite;
+  .arrow-2 img, .arrow-6 img {
+    animation: arrow-animation-2 1.25s infinite;
   }
-  .arrow-3 img {
-    animation: arrow-animation-3 1.5s infinite;
+  .arrow-3 img, .arrow-7 img {
+    animation: arrow-animation-3 1.25s infinite;
   }
-  .arrow-4 img {
-    animation: arrow-animation-4 1.5s infinite;
+  .arrow-4 img, .arrow-8 img {
+    animation: arrow-animation-4 1.25s infinite;
   }
   @keyframes arrow-animation-1 {
     0%,
@@ -184,12 +222,9 @@ export function generateStyles(config) {
 }
 
 export const card_base = `
-<ha-card>
   <div id="inv-info"></div>
   <div id="card-grid" class="diagram-grid"></div>
   <div id="datetime-info" class="update-time"></div>
-</ha-card>
-
 `;
 
 export function generateStatus(config) {
@@ -250,7 +285,6 @@ export function generateGrid(config) {
     cells += `<div id="solar-image" class="cell image-cell"><img src="${constants.getBase64Data("solar")}"></div>`; // Solar image
     cells += `<div id="solar-info" class="cell text-cell"></div>`; // Solar info
     cells += `<div class="cell"></div>`;
-    cells += `<div class="cell"></div>`;
     // Row 1
     cells += `<div id="battery-charge-info" class="cell text-cell"></div>`; // Battery charge/discharge info
     cells += `<div class="cell"></div>`;
@@ -271,9 +305,8 @@ export function generateGrid(config) {
   // Row 2
   cells += `<div id="battery-image" class="cell image-cell"><img src="${constants.getBase64Data("battery-0")}"></div>`; // Battery image
   cells += `<div id="battery-arrows" class="cell arrow-cell"></div>`; // Battery arrows
-  cells += `<div id="inverter-image" class="cell image-cell"><img src="${constants.getBase64Data("inverter")}"></div>`; // Inverter image
-  cells += `<div id="grid-arrows-1" class="cell arrow-cell"></div>`; // Grid arrows 1
-  cells += `<div id="grid-arrows-2" class="cell arrow-cell"></div>`; // Grid arrows 2
+  cells += `<div id="inverter-image" class="cell image-cell"><img src="${constants.getBase64Data("parallel-inverter")}"></div>`; // Inverter image
+  cells += `<div id="grid-arrows" class="cell arrow-cell"></div>`; // Grid arrows
   cells += `<div id="grid-image" class="cell image-cell"><img src="${constants.getBase64Data("grid")}"></div>`; // Grid image
 
   // Row 3
@@ -288,8 +321,8 @@ export function generateGrid(config) {
   if (config.energy_allocations.is_used) {
     // Power Allocations
     cells += `<div class="cell">${refresh_button_left}</div>`;
-    cells += `<div id="home-info" class="cell text-cell"></div>`; // Home info
     cells += `<div id="home-image" class="cell image-cell"><img src="${constants.getBase64Data("home-normal")}"></div>`; // Home image
+    cells += `<div id="home-info" class="cell text-cell"></div>`; // Home info
     cells += `<div id="power-allocation-arrows" class="cell arrow-cell"></div>`; // Power allocation arrows
     cells += `<div id="power-allocation-image" class="cell image-cell"><img src="${constants.getBase64Data(
       "home-normal"
@@ -297,10 +330,9 @@ export function generateGrid(config) {
     cells += `<div id="power-allocation-info" class="cell text-cell"></div>`; // Power allocation info
   } else {
     cells += `<div class="cell">${refresh_button_left}</div>`;
-    cells += `<div id="home-info" class="cell text-cell"></div>`; // Home info
+    cells += `<div class="cell"></div>`;
     cells += `<div id="home-image" class="cell image-cell"><img src="${constants.getBase64Data("home-normal")}"></div>`; // Home image
-    cells += `<div class="cell"></div>`;
-    cells += `<div class="cell"></div>`;
+    cells += `<div id="home-info" class="cell text-cell"></div>`; // Home info
     cells += `<div class="cell"></div>`;
   }
 
@@ -322,9 +354,9 @@ export function generateDateTime(config) {
   return date_time_info;
 }
 
-export function generateArrows() {
+export function generateArrows(num) {
   var inner_html = ``;
-  for (let i = 1; i < 5; i++) {
+  for (let i = 1; i <= num; i++) {
     inner_html += `<div class="arrow-${i}"><img src="${constants.getBase64Data("arrow")}"></div>`;
   }
   return inner_html;

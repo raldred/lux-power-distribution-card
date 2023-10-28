@@ -3,6 +3,8 @@ import * as constants from "./constants.js";
 export function buildConfig(config) {
   let new_config = constants.base_config;
 
+  new_config.header = config.header;
+
   // Check inverter count
   let inverter_count = parseInt(config.inverter_count);
   if (isNaN(inverter_count) || inverter_count <= 0) {
@@ -140,9 +142,43 @@ function importConfigValues(config, new_config, inverter_count, object_name) {
   }
 }
 
-export function getEntitiesState(config, hass, config_entity, index) {
-  const entity = hass.states[config[config_entity].entities[index]];
+export function getEntity(config, hass, config_entity, index) {
+  const entityConfig = config[config_entity].entities[index];
+  if (typeof entityConfig === "string") {
+    return hass.states[entityConfig];
+  }
 
+  if (typeof entityConfig.consumption === "string" && typeof entityConfig.production === "string") {
+    const consumptionValue = parseInt(getEntitiesStateValue(hass.states[entityConfig.consumption]));
+    const productionValue = parseInt(getEntitiesStateValue(hass.states[entityConfig.production]));
+
+    if (typeof consumptionValue === "number" && consumptionValue > 0) {
+      return hass.states[entityConfig.consumption];
+    }
+
+    return hass.states[entityConfig.production];
+  }
+}
+
+export function getEntitiesState(config, hass, config_entity, index) {
+  
+  const entity = getEntity(config, hass, config_entity, index);
+  let value = getEntitiesStateValue(entity);
+
+  const entityConfig = config[config_entity].entities[index];
+  if (typeof entityConfig !== "string" && typeof entityConfig.consumption === "string" && typeof entityConfig.production === "string") {
+    const consumptionValue = parseInt(getEntitiesStateValue(hass.states[entityConfig.consumption]));
+    const productionValue = parseInt(getEntitiesStateValue(hass.states[entityConfig.production]));
+
+    if (typeof consumptionValue === "number" && consumptionValue > 0) {
+      value *= -1;
+    }
+  }
+
+  return value;
+}
+
+function getEntitiesStateValue(entity) {
   if (entity.state) {
     if (entity.state === "unavailable" || entity.state === "unknown") {
       return "-";
@@ -156,7 +192,7 @@ export function getEntitiesState(config, hass, config_entity, index) {
 }
 
 export function getEntitiesAttribute(config, hass, config_entity, attribute_name, index) {
-  const entity = hass.states[config[config_entity].entities[index]];
+  const entity = getEntity(config, hass, config_entity, index);
 
   if (entity.attributes && entity.attributes[attribute_name]) {
     return entity.attributes[attribute_name];
@@ -166,7 +202,7 @@ export function getEntitiesAttribute(config, hass, config_entity, attribute_name
 }
 
 export function getEntitiesUnit(config, hass, config_entity, index) {
-  const entity = hass.states[config[config_entity].entities[index]];
+  const entity = getEntity(config, hass, config_entity, index);
 
   if (entity.state) {
     if (isNaN(entity.state)) return "-";
