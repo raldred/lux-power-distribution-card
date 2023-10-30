@@ -89,6 +89,18 @@ export function buildConfig(config) {
     }
   }
 
+  // Check parallel settings
+  if (config.parallel) {
+    if (config.parallel.average_voltage) {
+      new_config.parallel.average_voltage = true;
+    }
+    if (config.parallel.parallel_first) {
+      new_config.parallel.parallel_first = true;
+    } else {
+      new_config.parallel.parallel_first = false;
+    }
+  }
+
   validateConfig(new_config);
 
   return new_config;
@@ -145,18 +157,29 @@ function importConfigValues(config, new_config, inverter_count, object_name) {
 export function getEntity(config, hass, config_entity, index) {
   const entityConfig = config[config_entity].entities[index];
   if (typeof entityConfig === "string") {
-    return hass.states[entityConfig];
+    try {
+      return hass.states[entityConfig];
+    } catch (error) {
+      throw new Error(`Invalid entity: ${entityConfig}`);
+    }
   }
 
   if (typeof entityConfig.consumption === "string" && typeof entityConfig.production === "string") {
     const consumptionValue = parseInt(getEntitiesStateValue(hass.states[entityConfig.consumption]));
     const productionValue = parseInt(getEntitiesStateValue(hass.states[entityConfig.production]));
 
-    if (typeof consumptionValue === "number" && consumptionValue > 0) {
-      return hass.states[entityConfig.consumption];
+    if (typeof consumptionValue === "number" && consumptionValue > 0) {3
+      try {
+        return hass.states[entityConfig.consumption];
+      } catch (error) {
+        throw new Error(`Invalid entity: ${entityConfig.consumption}`);
+      }
     }
-
-    return hass.states[entityConfig.production];
+    try {
+      return hass.states[entityConfig.production];
+    } catch (error) {
+      throw new Error(`Invalid entity: ${entityConfig.production}`);
+    }
   }
 }
 
@@ -182,13 +205,29 @@ function getEntitiesStateValue(entity) {
   if (entity.state) {
     if (entity.state === "unavailable" || entity.state === "unknown") {
       return "-";
-    } else if (isNaN(entity.state)) {
-      return entity.state;
     } else {
       return entity.state;
     }
   }
   return "-";
+}
+
+export function getEntitiesNumState(config, hass, config_entity, index, is_int = true, is_avg = false) {
+  let value = 0;
+  if (index == -1) {
+    for (let i = 0; i < config.inverter_count; i++) {
+      value += parseFloat(getEntitiesState(config, hass, config_entity, i));
+    }
+    if (is_avg) {
+      value = value / config.inverter_count;
+    }
+  } else {
+    value = parseFloat(getEntitiesState(config, hass, config_entity, index));
+  }
+  if (is_int) {
+    return parseInt(value);
+  }
+  return Math.round(value * 100) / 100;
 }
 
 export function getEntitiesAttribute(config, hass, config_entity, attribute_name, index) {
@@ -208,7 +247,6 @@ export function getEntitiesUnit(config, hass, config_entity, index) {
     if (isNaN(entity.state)) return "-";
     else return entity.attributes.unit_of_measurement ?? "";
   }
-  return "";
 }
 
 export function getStatusMessage(status_code, show_no_grid_as_warning) {
@@ -280,5 +318,5 @@ export function getStatusMessage(status_code, show_no_grid_as_warning) {
       break;
   }
 
-  return `Status: ${message} ${indicator}`;
+  return `${message} ${indicator}`;
 }

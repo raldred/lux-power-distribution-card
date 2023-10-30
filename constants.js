@@ -1,6 +1,10 @@
 export const base_config = {
   inverter_count: null,
   header: null,
+  parallel: {
+    average_voltage: false,
+    parallel_first: true,
+  },
   battery_soc: {
     is_used: false,
     entities: [],
