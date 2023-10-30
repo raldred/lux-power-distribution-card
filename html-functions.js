@@ -329,7 +329,7 @@ export function generateGrid(config) {
   // Row 2
   cells += `<div id="battery-image" class="cell image-cell"><img src="${constants.getBase64Data("battery-0")}"></div>`; // Battery image
   cells += `<div id="battery-arrows" class="cell arrow-cell"></div>`; // Battery arrows
-  cells += `<div id="inverter-image" class="cell image-cell"><img src="${constants.getBase64Data("inverter")}"></div>`; // Inverter image
+  cells += `<div id="inverter-image" class="cell image-cell"><img src="${constants.getBase64Data("parallel-inverter")}"></div>`; // Inverter image
   cells += `<div id="grid-arrows" class="cell arrow-cell"></div>`; // Grid arrows
   cells += `<div id="grid-image" class="cell image-cell"><img src="${constants.getBase64Data("grid")}"></div>`; // Grid image
 
