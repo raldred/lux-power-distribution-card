@@ -1,7 +1,24 @@
 import * as constants from "./constants.js";
 
 export function buildConfig(config) {
-  let new_config = constants.base_config;
+  function deepcopy(value) {
+    if (!(!!value && typeof value == 'object')) {
+      return value;
+    }
+    if (Object.prototype.toString.call(value) == '[object Date]') {
+      return new Date(value.getTime());
+    }
+    if (Array.isArray(value)) {
+      return value.map(deepcopy);
+    }
+    const result = {};
+    Object.keys(value).forEach(
+      function(key) { result[key] = deepcopy(value[key]); });
+    return result;
+  }
+
+  config = deepcopy(config);
+  const new_config = deepcopy(constants.base_config)
 
   new_config.title = config.title;
 
@@ -155,32 +172,25 @@ function importConfigValues(config, new_config, inverter_count, object_name) {
 }
 
 export function getEntity(config, hass, config_entity, index) {
+  let entity;
   const entityConfig = config[config_entity].entities[index];
   if (typeof entityConfig === "string") {
-    try {
-      return hass.states[entityConfig];
-    } catch (error) {
-      throw new Error(`Invalid entity: ${entityConfig}`);
+    entity = hass.states[entityConfig];
+  } else if (entityConfig && typeof entityConfig.consumption === "string" && typeof entityConfig.production === "string") {
+    if (typeof consumptionValue === "number" && consumptionValue > 0) {
+      entity = hass.states[entityConfig.consumption];
+    } else {
+      entity = hass.states[entityConfig.production];
     }
+  } else {
+    //throw new Error(`Provide entity for ${config_entity}`);
   }
 
-  if (entityConfig && typeof entityConfig.consumption === "string" && typeof entityConfig.production === "string") {
-    const consumptionValue = parseInt(getEntitiesStateValue(hass.states[entityConfig.consumption]));
-    const productionValue = parseInt(getEntitiesStateValue(hass.states[entityConfig.production]));
-
-    if (typeof consumptionValue === "number" && consumptionValue > 0) {3
-      try {
-        return hass.states[entityConfig.consumption];
-      } catch (error) {
-        throw new Error(`Invalid entity: ${entityConfig.consumption}`);
-      }
-    }
-    try {
-      return hass.states[entityConfig.production];
-    } catch (error) {
-      throw new Error(`Invalid entity: ${entityConfig.production}`);
-    }
+  if (entity == undefined) {
+    //throw new Error(`Invalid entity: ${entityConfig.consumption} for ${config_entity}`);
   }
+
+  return entity;
 }
 
 export function getEntitiesState(config, hass, config_entity, index) {
