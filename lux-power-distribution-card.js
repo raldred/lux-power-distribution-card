@@ -15,8 +15,8 @@ class LuxPowerDistributionCard extends HTMLElement {
 
     if (!this.content) {
       this.createCard();
-      this.bindRefresh(this._hass, this._config);
-      this.bindHistoryGraph(this._hass, this._config);
+      this.bindRefresh(this.card, this._hass, this._config);
+      this.bindHistoryGraph(this.card, this._hass, this._config);
     }
 
     this.updateCard();
@@ -33,9 +33,9 @@ class LuxPowerDistributionCard extends HTMLElement {
 
     const shadowRoot = this.shadowRoot;
 
-    const card = document.createElement('ha-card');
+    this.card = document.createElement('ha-card');
     if (!this._config.title) {
-      card.setAttribute('header', this._config.title);
+      this.card.setAttribute('header', this._config.title);
     }
 
     this.content = document.createElement('div');
@@ -48,12 +48,12 @@ class LuxPowerDistributionCard extends HTMLElement {
       <div id="datetime-info" class="update-time">${hf.generateDateTime(this._config)}</div>
     `;
 
-    card.appendChild(this.content);
+    this.card.appendChild(this.content);
 
     while (shadowRoot.lastChild) {
       shadowRoot.removeChild(shadowRoot.lastChild);
     }
-    shadowRoot.appendChild(card);
+    shadowRoot.appendChild(this.card);
   }
 
   updateCard() {
@@ -82,13 +82,13 @@ class LuxPowerDistributionCard extends HTMLElement {
     }
   }
 
-  bindRefresh(hass, config) {
-    let refresh_button_left = this.shadowRoot.querySelector("#refresh-button-left");
+  bindRefresh(card, hass, config) {
+    let refresh_button_left = card.querySelector("#refresh-button-left");
     if (refresh_button_left) {
       refresh_button_left.addEventListener("click", function (source) {
         let index = 0;
         if (config.inverter_count > 1) {
-          const inverter_selector_element = this.shadowRoot.querySelector("#inverter-selector");
+          const inverter_selector_element = card.querySelector("#inverter-selector");
           if (inverter_selector_element) {
             let select_value = inverter_selector_element.value;
             let parsed_value = parseInt(select_value);
@@ -110,12 +110,12 @@ class LuxPowerDistributionCard extends HTMLElement {
         }
       });
     }
-    let refresh_button_right = this.shadowRoot.querySelector("#refresh-button-right");
+    let refresh_button_right = card.querySelector("#refresh-button-right");
     if (refresh_button_right) {
       refresh_button_right.addEventListener("click", function (source) {
         let index = 0;
         if (config.inverter_count > 1) {
-          const inverter_selector_element = this.shadowRoot.querySelector("#inverter-selector");
+          const inverter_selector_element = card.querySelector("#inverter-selector");
           if (inverter_selector_element) {
             let select_value = inverter_selector_element.value;
             let parsed_value = parseInt(select_value);
@@ -139,7 +139,7 @@ class LuxPowerDistributionCard extends HTMLElement {
     }
   }
 
-  bindHistoryGraph(hass, config) {
+  bindHistoryGraph(card, hass, config) {
     const history_map = {
       "#solar-image": "pv_power",
       "#battery-image": "battery_soc",
@@ -149,12 +149,12 @@ class LuxPowerDistributionCard extends HTMLElement {
 
     for (const [key, value] of Object.entries(history_map)) {
       if (history_map.hasOwnProperty(key)) {
-        let button_element = this.shadowRoot.querySelector(key);
+        let button_element = card.querySelector(key);
         if (button_element) {
           button_element.addEventListener("click", function (source) {
             let index = 0;
             if (config.inverter_count > 1) {
-              const inverter_selector_element = this.shadowRoot.querySelector("#inverter-selector");
+              const inverter_selector_element = card.querySelector("#inverter-selector");
               if (inverter_selector_element) {
                 let select_value = inverter_selector_element.value;
                 let parsed_value = parseInt(select_value);
@@ -174,7 +174,7 @@ class LuxPowerDistributionCard extends HTMLElement {
             event.detail = {
               entityId,
             };
-            this.shadowRoot.dispatchEvent(event);
+            card.dispatchEvent(event);
             return event;
           });
         }
