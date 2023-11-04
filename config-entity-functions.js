@@ -172,25 +172,32 @@ function importConfigValues(config, new_config, inverter_count, object_name) {
 }
 
 export function getEntity(config, hass, config_entity, index) {
-  let entity;
   const entityConfig = config[config_entity].entities[index];
   if (typeof entityConfig === "string") {
-    entity = hass.states[entityConfig];
-  } else if (entityConfig && typeof entityConfig.consumption === "string" && typeof entityConfig.production === "string") {
-    if (typeof consumptionValue === "number" && consumptionValue > 0) {
-      entity = hass.states[entityConfig.consumption];
-    } else {
-      entity = hass.states[entityConfig.production];
+    try {
+      return hass.states[entityConfig];
+    } catch (error) {
+      throw new Error(`Invalid entity: ${entityConfig}`);
     }
-  } else {
-    //throw new Error(`Provide entity for ${config_entity}`);
   }
 
-  if (entity == undefined) {
-    //throw new Error(`Invalid entity: ${entityConfig.consumption} for ${config_entity}`);
-  }
+  if (entityConfig && typeof entityConfig.consumption === "string" && typeof entityConfig.production === "string") {
+    const consumptionValue = parseInt(getEntitiesStateValue(hass.states[entityConfig.consumption]));
+    const productionValue = parseInt(getEntitiesStateValue(hass.states[entityConfig.production]));
 
-  return entity;
+    if (typeof consumptionValue === "number" && consumptionValue > 0) {3
+      try {
+        return hass.states[entityConfig.consumption];
+      } catch (error) {
+        throw new Error(`Invalid entity: ${entityConfig.consumption}`);
+      }
+    }
+    try {
+      return hass.states[entityConfig.production];
+    } catch (error) {
+      throw new Error(`Invalid entity: ${entityConfig.production}`);
+    }
+  }
 }
 
 export function getEntitiesState(config, hass, config_entity, index) {
@@ -206,6 +213,8 @@ export function getEntitiesState(config, hass, config_entity, index) {
       value *= -1;
     }
   }
+
+  console.log(config_entity, value);
 
   return value;
 }
